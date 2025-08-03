@@ -26,7 +26,7 @@ Assume:
 
 Run the command as an example:
 ```bash
-./bf 3 TaxonID.csv < data/C3001/C3001C1.species_species.100.csv
+./bf 3 IBD_TaxonID.csv < data/C3001/C3001C1.species_species.100.csv
 ```
 
 
@@ -83,7 +83,7 @@ This tool identifies subgraph motifs of a specified size (K) from network data t
 ## Practical Run Example
 Based on the command you provided, the complete execution method is as follows:
 ```bash
-./random 3 1000000 TaxonID.csv < data/M0275/M0275M_Birth.species_species.csv
+./random 3 1000000 MC_TaxonID.csv < data/M0275/M0275M_Birth.species_species.csv
 ```
 - This command will analyze **3-node subgraphs** through **1,000,000 random samples**, extract subgraph motifs from the data file `data/M0275/M0275M_Birth.species_species.csv`, and output results combined with classification information from `TaxonID.csv`.
 
