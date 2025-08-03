@@ -1,36 +1,118 @@
-# Motif Analysis in Horizontal Gene Transfer Networks (BIBM_Motif.pdf)
+# Subgraph Motif Analysis Tool (bf) - Usage Guide
 
-## Abstract
-Horizontal gene transfer (HGT) facilitates genetic material exchange between non-parental microorganisms, promoting genetic diversity and adaptability. This study introduces a novel motif detection algorithm for microbial HGT networks, combining exhaustive enumeration and stochastic sampling to identify 3- to 5-node motifs. Analysis of mother-infant (MC) and inflammatory bowel disease (IBD) datasets revealed 29 unique motifs, with probiotic genera in peripheral positions, heritable HGT events in MC, and Pantoea as a potential cross-clade transfer vector in IBD {insert\_element\_0\_}.
+## Overview
+The `bf` tool identifies subgraph motifs of a specified size (K) from network data and counts their occurrences. Output includes motif classification information (taxonID), structure, and occurrence count.
 
-## Introduction
-HGT networks model gene transfer between donors (nodes) and recipients (edges), offering a systems-level view of genetic flow. Unlike global structural analyses (e.g., power-law distributions, modularity), motif analysis focuses on recurrent small subgraphs—enriched in real networks compared to random ones—uncovering specific transfer patterns like mutual exchange triads or hub-spoke structures {insert\_element\_1\_}.
 
-## Methodology
+## Command Format
+```bash
+./bf <K-value> <taxon_file_path> < <data_file_path>
+```
 
-### Motif Detection Algorithm
-1. **Subnetwork Enumeration**  
-   - For 3- and 4-node motifs: Exhaustive enumeration via neighbor-expansion DFS, adding only neighbors with IDs larger than the smallest node in the current motif {insert\_element\_2\_}.  
-   - For 5-node motifs: Degree-weighted random sampling (probability ∝ 15×degree³, parameters from least squares) to prioritize hub-connected subgraphs {insert\_element\_3\_}.  
 
-2. **Duplicate Removal**  
-   Subgraphs are sorted by node ID and encoded into a unique Canonical ID (CID) to eliminate duplicates (e.g., 3-node CID: \((ID_A \times N + ID_B) \times N + ID_C\)) {insert\_element\_4\_}.  
+## Parameter Explanation
+| Parameter Position       | Description                                  | Example Value                                  |
+|--------------------------|----------------------------------------------|------------------------------------------------|
+| First parameter          | Size of the subgraph (K, positive integer)   | `3` (analyzes 3-node subgraphs)                |
+| Second parameter         | Path to the taxon file (CSV)                  | `TaxonID.csv` (taxon file in current directory) |
+| Input redirection part   | Path to the network data file (CSV)           | `data/C3001/C3001C1.species_species.100.csv`   |
 
-3. **Pre-classification & Identification**  
-   Motifs are pre-classified by node type (Taxon ID, via NCBI Taxonomy and TaxonKit) {insert\_element\_5\_}. Isomorphism is confirmed by matching node types and edge patterns across all permutations {insert\_element\_6\_}.  
 
-4. **Optimizations**  
-   - Unordered flat sets/maps improve cache efficiency, boosting runtime by 2-3x {insert\_element\_7\_}.  
-   - 128-bit integer encoding accelerates subgraph comparison by 10-20x {insert\_element\_8\_}.  
+## Example Command
+Assume:
+- Analyzing **3-node subgraphs** (K=3)
+- Taxon file: `TaxonID.csv` (in current directory)
+- Data file: `data/C3001/C3001C1.species_species.100.csv`
 
-### Datasets
-- **MC**: Longitudinal samples (gestation to 3 months post-birth) tracking mother-infant HGT dynamics {insert\_element\_9\_}.  
-- **IBD**: Cross-sectional samples (UC, CD, healthy controls) to study disease-associated transfer {insert\_element\_10\_}.  
+Run the command as an example:
+```bash
+./bf 3 TaxonID.csv < data/C3001/C3001C1.species_species.100.csv
+```
 
-## Results
-- **Motif Distribution**: 29 unique motifs, with star structures (e.g., 1113) most prevalent {insert\_element\_11\_}.  
-- **MC Dataset**: Probiotics (e.g., Bacteroides) in peripheral positions; heritable motifs and infant-specific HGT (e.g., Clostridium) {insert\_element\_12\_}.  
-- **IBD Dataset**: Bacteroides shows increased intergroup transfer in disease; Pantoea (hub in UC motifs) facilitates cross-clade transfer {insert\_element\_13\_}.  
 
-## Conclusion
-Motif analysis reveals ecological roles in HGT networks: peripheral probiotics, heritable patterns in early life, and disease-specific transfer vectors like Pantoea {insert\_element\_14\_}.
+## Input File Requirements
+1. **Taxon File**:  
+   CSV format containing mappings between node reference IDs and taxonIDs (format must comply with parsing logic in the `read_taxon` function of the source code).
+
+2. **Data File**:  
+   CSV format where the first line lists node identifiers, and subsequent lines describe connectivity between the corresponding node and others (used to build adjacency matrix; parsing logic in the `read_data` function of the source code).
+
+
+## Output Description
+Each line represents a subgraph motif with the format:
+```
+K  taxonID1  taxonID2  ...  taxonIDK  e11 e12 ... eKK  count
+```
+- `taxonID1...taxonIDK`: Taxon IDs of nodes in the motif
+- `e11...eKK`: Adjacency matrix of the motif (1 = edge exists, 0 = no edge)
+- Last value: Number of times the motif occurs
+
+A statistics message will also appear in the terminal (e.g., total motifs found):
+```
+[Info] Found X motif(s) of Y subgraph(s).
+```
+
+
+## Notes
+- If `bf` is not in the current directory, use its absolute path (e.g., `/home/user/tools/bf`).
+- Enclose paths with spaces in quotes (e.g., `./bf 3 "my taxon.csv" < "data/file.csv"`).
+- Larger K values may increase runtime significantly; use reasonable values (e.g., K≤5) based on data size.
+
+
+# Random Subgraph Motif Analysis Tool - Usage Instructions
+
+## Overview
+This tool identifies subgraph motifs of a specified size (K) from network data through random sampling and counts their occurrences. The output includes the subgraph's classification information (taxonID), structure, and the number of times it was sampled.
+
+
+## Command Format
+```bash
+./random <K-value> <number_of_samples> <taxon_file_path> < <data_file_path>
+```
+
+
+## Parameter Explanation
+| Parameter Position       | Description                          | Example Value (matching the actual command) |
+|--------------------------|--------------------------------------|---------------------------------------------|
+| First parameter          | Subgraph size (K, positive integer)  | `3` (analyzes 3-node subgraphs)             |
+| Second parameter         | Number of random samples (R, positive integer) | `1000000` (performs 1,000,000 random samplings) |
+| Third parameter          | Path to the taxon file               | `TaxonID.csv` (taxon file in the current directory) |
+| Input redirection part   | Path to the network data file        | `data/M0275/M0275M_Birth.species_species.csv` |
+
+
+## Practical Run Example
+Based on the command you provided, the complete execution method is as follows:
+```bash
+./random 3 1000000 TaxonID.csv < data/M0275/M0275M_Birth.species_species.csv
+```
+- This command will analyze **3-node subgraphs** through **1,000,000 random samples**, extract subgraph motifs from the data file `data/M0275/M0275M_Birth.species_species.csv`, and output results combined with classification information from `TaxonID.csv`.
+
+
+## Input File Requirements
+1. **Taxon File**:  
+   CSV format containing mappings between node reference IDs and taxonIDs (parsing logic is in the `read_taxon` function of the code).
+
+2. **Data File**:  
+   CSV format where the first line lists node identifiers, and subsequent lines describe the connectivity between the corresponding node and other nodes (used to build the adjacency matrix; parsing logic is in the `read_data` function of the code).
+
+
+## Output Description
+Each line outputs a subgraph motif in the following format:
+```
+K  taxonID1  taxonID2  ...  taxonIDK  e11 e12 ... eKK  sample_count
+```
+- `taxonID1...taxonIDK`: Taxon IDs of each node in the subgraph
+- `e11...eKK`: Adjacency matrix of the subgraph (1 indicates an edge exists, 0 indicates no edge)
+- The last value: The number of times this motif was found in random sampling
+
+A statistical message will also be displayed in the terminal, for example:
+```
+[Info] Found X motif(s) of Y subgraph(s).
+```
+(Indicating a total of X motifs found, corresponding to Y sampled subgraphs)
+
+
+## Notes
+- If the `random` program is not in the current directory, use an absolute path (e.g., `/home/user/tools/random`).
+- If paths contain spaces, enclose them in quotes (e.g., `./random 3 1000000 "taxon file.csv" < "data file.csv"`).
+- A larger number of samples (R-value) results in more accurate distribution estimates but longer runtime; adjust based on data size.
